@@ -9,6 +9,10 @@ struct Observable(T) {
 	import std.traits : isImplicitlyConvertible;
 	Observer!(T)[void*] observer;
 
+	@property size_t length() const @safe pure nothrow @nogc {
+		return this.observer.length;
+	}
+
 	void subscribe(void delegate(ref const(T)) @safe onMsg) @safe pure {
 		this.subscribe(onMsg, null);
 	}
@@ -22,6 +26,12 @@ struct Observable(T) {
 		this.observer[cast(void*)onMsg.ptr] = ob;
 	}
 
+	void unSubscribe(void delegate(ref const(T)) @safe onMsg) @safe pure {
+		if(onMsg.ptr in this.observer) {
+			this.observer.remove(onMsg.ptr);
+		}
+	}
+
 	void push(S)(auto ref const(S) value) @safe
 			if(isImplicitlyConvertible!(S,T))
 	{
@@ -32,17 +42,20 @@ struct Observable(T) {
 }
 
 unittest {
-	import std.functional : toDelegate;
+	int globalInt = 0;
 
-	static void fun(ref const(int) f) @safe {
-		import std.stdio : writeln;
-		() @trusted {
-			writeln(f);
-		}();
+	void fun(ref const(int) f) @safe {
+		globalInt = f;
 	}
 
 	Observable!int intOb;
-	intOb.subscribe(toDelegate(&fun));
-
+	assert(intOb.length == 0);
+	intOb.subscribe(&fun);
+	assert(intOb.length == 1);
 	intOb.push(10);
+	assert(globalInt == 10);
+	intOb.push(globalInt);
+	assert(globalInt == 10);
+	intOb.unSubscribe(&fun);
+	assert(intOb.length == 0);
 }
