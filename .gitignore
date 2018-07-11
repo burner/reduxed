@@ -1,0 +1,14 @@
+.dub
+docs.json
+__dummy.html
+docs/
+fluxd.so
+fluxd.dylib
+fluxd.dll
+fluxd.a
+fluxd.lib
+fluxd-test-*
+*.exe
+*.o
+*.obj
+*.lst

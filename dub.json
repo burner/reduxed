@@ -1,0 +1,10 @@
+{
+	"name": "fluxd",
+	"authors": [
+		"burner"
+	],
+	"dflags": ["-dip1000", "-dip25"],
+	"description": "A flux like store in d",
+	"copyright": "Copyright © 2018, burner",
+	"license": "LGPL3"
+}
