@@ -9,6 +9,14 @@ struct Observable(T) {
 	import std.traits : isImplicitlyConvertible;
 	Observer!(T)[void*] observer;
 
+	~this() @safe {
+		foreach(ref it; this.observer) {
+			if(it.onClose) {
+				it.onClose();
+			}
+		}
+	}
+
 	@property size_t length() const @safe pure nothrow @nogc {
 		return this.observer.length;
 	}
@@ -58,4 +66,23 @@ unittest {
 	assert(globalInt == 10);
 	intOb.unSubscribe(&fun);
 	assert(intOb.length == 0);
+}
+
+unittest {
+	bool b;
+
+	void fun(ref const(int) f) @safe {
+	}
+
+	void fun2() @safe {
+		b = true;
+	}
+
+	{
+		Observable!int ob;
+		ob.subscribe(&fun, &fun2);
+		ob.push(10);
+	}
+
+	assert(b);
 }
