@@ -10,6 +10,7 @@ struct Observable(T) {
 	Observer!(T)[void*] observer;
 
 	~this() @safe {
+		import std.stdio;
 		foreach(ref it; this.observer) {
 			if(it.onClose) {
 				it.onClose();
@@ -31,13 +32,19 @@ struct Observable(T) {
 		Observer!T ob;
 		ob.onMsg = onMsg;
 		ob.onClose = onClose;
-		this.observer[cast(void*)onMsg.ptr] = ob;
+		() @trusted { 
+			assert(onMsg.funcptr);
+			this.observer[cast(void*)onMsg.funcptr] = ob;
+		}();
 	}
 
 	void unSubscribe(void delegate(ref const(T)) @safe onMsg) @safe pure {
-		if(onMsg.ptr in this.observer) {
-			this.observer.remove(onMsg.ptr);
-		}
+		() @trusted { 
+			if(onMsg.funcptr in this.observer) {
+					assert(onMsg.funcptr);
+					this.observer.remove(cast(void*)onMsg.funcptr);
+			}
+		}();
 	}
 
 	void push(S)(auto ref const(S) value) @safe
@@ -69,9 +76,15 @@ unittest {
 }
 
 unittest {
+	import std.conv : to;
 	bool b;
 
 	void fun(ref const(int) f) @safe {
+		int a = 10;
+	}
+
+	void fun1(ref const(int) f) @safe {
+		int c = 10;
 	}
 
 	void fun2() @safe {
@@ -81,6 +94,8 @@ unittest {
 	{
 		Observable!int ob;
 		ob.subscribe(&fun, &fun2);
+		ob.subscribe(&fun1);
+		assert(ob.length == 2, to!string(ob.length));
 		ob.push(10);
 	}
 
