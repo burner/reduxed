@@ -32,19 +32,19 @@ struct Observable(T) {
 		Observer!T ob;
 		ob.onMsg = onMsg;
 		ob.onClose = onClose;
-		() @trusted { 
-			assert(onMsg.funcptr);
-			this.observer[cast(void*)onMsg.funcptr] = ob;
-		}();
+
+		void* fptr = () @trusted { return cast(void*)(onMsg.funcptr); }();
+		assert(fptr);
+		this.observer[fptr] = ob;
 	}
 
 	void unSubscribe(void delegate(ref const(T)) @safe onMsg) @safe pure {
-		() @trusted { 
-			if(onMsg.funcptr in this.observer) {
-					assert(onMsg.funcptr);
-					this.observer.remove(cast(void*)onMsg.funcptr);
-			}
-		}();
+		void* fptr = () @trusted { return cast(void*)(onMsg.funcptr); }();
+		assert(fptr);
+
+		if(fptr in this.observer) {
+			this.observer.remove(fptr);
+		}
 	}
 
 	void push(S)(auto ref const(S) value) @safe
