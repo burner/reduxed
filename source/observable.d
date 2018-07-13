@@ -101,3 +101,18 @@ unittest {
 
 	assert(b);
 }
+
+unittest {
+	struct Foo {
+		int a;
+		int b;
+	}
+
+	void fun(ref const(Foo) f) @safe {
+		assert(f.b == 10);
+	}
+
+	Observable!(Foo) ob;
+	ob.subscribe(&fun);
+	ob.push(Foo(9,10));
+}

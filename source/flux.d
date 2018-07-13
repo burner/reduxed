@@ -1,7 +1,21 @@
 module flux;
 
-struct Flux(T) {
+enum Flux;
+
+struct FluxStore(T) {
 	import observable;
+
+	pragma(msg, buildStruct!T());
+	mixin(buildStruct!T());
+
+	static string moduleNameFromString(string fully) {
+		import std.string : lastIndexOf;
+		const ptrdiff_t dot = fully.lastIndexOf('.');
+		if(dot != -1) {
+			return fully[0 .. dot];
+		}
+		return fully;
+	}
 
 	static string indentString(size_t indent) pure {
 		string ret;
@@ -12,7 +26,7 @@ struct Flux(T) {
 	}
 
 	static string buildStructImpl(S, size_t indent)() {
-		import std.traits : isBasicType;
+		import std.traits : isBasicType, hasUDA, fullyQualifiedName;
 		import std.format : format;
 
 		string ret;
@@ -24,14 +38,18 @@ struct Flux(T) {
 		foreach(mem; __traits(allMembers, S)) {
 			alias Type = typeof(__traits(getMember, S, mem));
 			enum isStruct = is(Type == struct);
-			static if(isStruct) {
+			static if(isStruct && hasUDA!(Type,Flux)) {
 				ret ~= buildStructImpl!(Type, indent + 1)();
-			}
-			static if(isStruct) {
 				ret ~= indentString(indent + 1) ~ format("__Flux%s %s;\n", 
 							Type.stringof, mem
 						);
 			} else {
+				static if(!isBasicType!(Type)) {
+					ret ~= indentString(indent + 1) 
+							~ format("import %s;\n",
+									moduleNameFromString(fullyQualifiedName!Type)
+								);
+				}
 				ret ~= indentString(indent + 1) ~ format("Observable!(%s) %s;\n", 
 							Type.stringof, mem
 						);
@@ -55,8 +73,6 @@ struct Flux(T) {
 		return ret;
 	}
 
-	mixin(buildStruct!T());
-	pragma(msg, buildStruct!T());
 }
 
 unittest {
@@ -92,24 +108,5 @@ unittest {
 		float b;
 	}
 
-	Flux!Bar store;
-}	
-
-unittest {
-	void fun(ref const(float) f) @safe {
-		int a = 10;
-	}
-
-	struct Foo {
-		float c;
-	}
-	struct Bar {
-		float a;
-		float b;
-		Foo foo;
-	}
-
-	Flux!Bar store;
-
-	store.foo.c.subscribe(&fun);
+	FluxStore!Bar store;
 }	
