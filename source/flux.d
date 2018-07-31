@@ -67,7 +67,7 @@ struct FluxStore(T) {
 
 	void execute(string obj, alias Fun)() {
 		import std.format : format;
-		mixin(format("this.%s.setValue(Fun(this.%s.getValue()));", obj, obj));
+		mixin(format("this.%s = Fun(this.%s.value);", obj, obj));
 	}
 
 }
@@ -118,5 +118,5 @@ unittest {
 	store.a.subscribe(&fun);
 
 	store.execute!("b", increment)();
-	assert(store.b.getValue() == 1);
+	assert(store.b.value == 1);
 }	

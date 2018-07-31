@@ -20,12 +20,13 @@ struct Observable(T) {
 		}
 	}
 
-	T getValue() {
+	T opCast(T)() {
 		return this.value;
 	}
 
-	void setValue(T newValue) {
+	typeof(this) opAssign(T newValue) {
 		this.value = newValue;
+		return this;
 	}
 
 	@property size_t length() const @safe pure nothrow @nogc {
