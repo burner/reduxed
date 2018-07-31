@@ -8,15 +8,6 @@ struct FluxStore(T) {
 	pragma(msg, buildStruct!T());
 	mixin(buildStruct!T());
 
-	static string moduleNameFromString(string fully) {
-		import std.string : lastIndexOf;
-		const ptrdiff_t dot = fully.lastIndexOf('.');
-		if(dot != -1) {
-			return fully[0 .. dot];
-		}
-		return fully;
-	}
-
 	static string indentString(size_t indent) pure {
 		string ret;
 		foreach(it; 0 .. indent) {
@@ -44,10 +35,11 @@ struct FluxStore(T) {
 							Type.stringof, mem
 						);
 			} else {
+				import std.traits : moduleName;
 				static if(!isBasicType!(Type)) {
 					ret ~= indentString(indent + 1) 
 							~ format("import %s;\n",
-									moduleNameFromString(fullyQualifiedName!Type)
+									moduleName!(Type)
 								);
 				}
 				ret ~= indentString(indent + 1) ~ format("Observable!(%s) %s;\n", 
@@ -71,6 +63,11 @@ struct FluxStore(T) {
 		ret ~= "Store store;\n";
 		ret ~= "alias store this;\n";
 		return ret;
+	}
+
+	void execute(string obj, alias Fun)() {
+		import std.format : format;
+		mixin(format("this.%s.setValue(Fun(this.%s.getValue()));", obj, obj));
 	}
 
 }
@@ -102,11 +99,24 @@ unittest {
 	f.foo.bar.a.subscribe(&fun);
 }
 
+int increment(int a) {
+	return a + 1;
+}
+
 unittest {
 	struct Bar {
 		float a;
-		float b;
+		int b;
 	}
 
 	FluxStore!Bar store;
+
+	void fun(ref const(float) f) @safe {
+		int a = 10;
+	}
+
+	store.a.subscribe(&fun);
+
+	store.execute!("b", increment)();
+	assert(store.b.getValue() == 1);
 }	

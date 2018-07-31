@@ -9,6 +9,8 @@ struct Observable(T) {
 	import std.traits : isImplicitlyConvertible;
 	Observer!(T)[void*] observer;
 
+	T value;
+
 	~this() @safe {
 		import std.stdio;
 		foreach(ref it; this.observer) {
@@ -16,6 +18,14 @@ struct Observable(T) {
 				it.onClose();
 			}
 		}
+	}
+
+	T getValue() {
+		return this.value;
+	}
+
+	void setValue(T newValue) {
+		this.value = newValue;
 	}
 
 	@property size_t length() const @safe pure nothrow @nogc {
@@ -50,8 +60,9 @@ struct Observable(T) {
 	void push(S)(auto ref const(S) value) @safe
 			if(isImplicitlyConvertible!(S,T))
 	{
+		this.value = value;
 		foreach(ref it; this.observer) {
-			it.onMsg(value);
+			it.onMsg(this.value);
 		}
 	}
 }
