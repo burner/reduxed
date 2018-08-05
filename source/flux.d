@@ -65,9 +65,20 @@ struct FluxStore(T) {
 		return ret;
 	}
 
-	void execute(string obj, alias Fun)() {
+	void exe(string obj, alias Fun, Args...)(auto ref Args args) {
 		import std.format : format;
-		mixin(format("this.%s = Fun(this.%s.value);", obj, obj));
+		mixin(format("this.%1$s = Fun(cast(int)this.%1$s, args);", obj));
+	}
+
+	typeof(this) opCall(string obj, alias Fun, Args...)(ref Args args) {
+		import std.format : format;
+		mixin(format("this.%1$s = Fun(cast(int)this.%1$s, args);", obj));
+		return this;
+	}
+
+	void execute(alias Fun, Args...)(ref Args args) {
+		import std.format : format;
+		mixin(format("args[0] = Fun(cast(int)args[0]);"));
 	}
 
 }
@@ -117,6 +128,8 @@ unittest {
 
 	store.a.subscribe(&fun);
 
-	store.execute!("b", increment)();
+	store.execute!(increment)(store.b);
 	assert(store.b.value == 1);
+	store!("b", increment)();
+	assert(store.b.value == 2);
 }	
