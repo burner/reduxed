@@ -65,20 +65,29 @@ struct FluxStore(T) {
 		return ret;
 	}
 
-	void exe(string obj, alias Fun, Args...)(auto ref Args args) {
+	static string buildExecuteCallString(Args...)() {
+		import std.traits : isInstanceOf;
 		import std.format : format;
-		mixin(format("this.%1$s = Fun(cast(int)this.%1$s, args);", obj));
-	}
-
-	typeof(this) opCall(string obj, alias Fun, Args...)(ref Args args) {
-		import std.format : format;
-		mixin(format("this.%1$s = Fun(cast(int)this.%1$s, args);", obj));
-		return this;
+		string ret = "args[0] = Fun(";
+		size_t idx = 0;
+		static foreach(arg; Args) {{
+			if(idx > 0) {
+				ret ~= ", ";
+			}
+			static if(isInstanceOf!(Observable, arg)) {
+				ret ~= format("cast(%s)args[%u]", arg.Type.stringof, idx);
+			} else {
+				ret ~= format("args[%u]", idx);
+			}
+			++idx;
+		}}
+		ret ~= ");\nargs[0].publish();";
+		return ret;
 	}
 
 	void execute(alias Fun, Args...)(ref Args args) {
-		import std.format : format;
-		mixin(format("args[0] = Fun(cast(int)args[0]);"));
+		pragma(msg, buildExecuteCallString!Args());
+		mixin(buildExecuteCallString!Args());
 	}
 
 }
@@ -110,26 +119,30 @@ unittest {
 	f.foo.bar.a.subscribe(&fun);
 }
 
-int increment(int a) {
-	return a + 1;
-}
-
 unittest {
+	import std.format : format;
 	struct Bar {
-		float a;
+		int a;
 		int b;
 	}
 
-	FluxStore!Bar store;
+	static int increment(int a, int b) {
+		return a + b; 
+	}
 
-	void fun(ref const(float) f) @safe {
-		int a = 10;
+	FluxStore!Bar store;
+	store.a = 1;
+	store.b = 2;
+
+	int a = 1337;
+
+	void fun(ref const(int) f) @safe {
+		a = f;
 	}
 
 	store.a.subscribe(&fun);
 
-	store.execute!(increment)(store.b);
-	assert(store.b.value == 1);
-	store!("b", increment)();
-	assert(store.b.value == 2);
+	store.execute!(increment)(store.a, store.b);
+	assert(store.a.value == 3, format("%s", store.a.value));
+	assert(a == 3, format("%s", a));
 }	

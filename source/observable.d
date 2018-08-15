@@ -1,13 +1,17 @@
 module observable;
 
+import mutex : DummyMutex;
+
 private struct Observer(T) {
 	void delegate(ref const(T)) @safe onMsg;
 	void delegate() @safe onClose;
 }
 
-struct Observable(T) {
+struct Observable(T, Mutex = DummyMutex) {
 	import std.traits : isImplicitlyConvertible;
 	Observer!(T)[void*] observer;
+	Mutex mutex;
+	alias Type = T;
 
 	T value;
 
@@ -62,6 +66,10 @@ struct Observable(T) {
 			if(isImplicitlyConvertible!(S,T))
 	{
 		this.value = value;
+		this.publish();
+	}
+
+	void publish() @safe {
 		foreach(ref it; this.observer) {
 			it.onMsg(this.value);
 		}
