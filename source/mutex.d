@@ -1,6 +1,6 @@
 module mutex;
 
 struct DummyMutex {
-	void lock();
-	void unlock();
+	void lock() {}
+	void unlock() {}
 }

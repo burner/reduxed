@@ -7,7 +7,7 @@
 		{
 			"name": "unittestperf",
 			"targetType": "executable",
-			"dflags": ["-main", "-unittest", "-profile" ]
+			"dflags": ["-unittest", "-profile" ]
 		}
 	],
 	"dflags": ["-dip1000", "-dip25"],

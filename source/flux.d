@@ -1,8 +1,10 @@
 module flux;
 
+import mutex : DummyMutex;
+
 enum Flux;
 
-struct FluxStore(T) {
+struct FluxStore(T,Mutex = DummyMutex) {
 	import observable;
 
 	pragma(msg, buildStruct!T());
@@ -65,6 +67,37 @@ struct FluxStore(T) {
 		return ret;
 	}
 
+	static string buildMutexArray(Args...)() {
+		import std.traits : isInstanceOf;
+		import std.format : format;
+		string ret = "import std.algorithm.sorting : sort;\n";
+		ret ~= format("Mutex*[%d] mutexes;\n", Args.length);
+		ret ~= "size_t mutexIdx;\n";
+		size_t idx = 0;
+		static foreach(arg; Args) {{
+			static if(isInstanceOf!(Observable, arg)) {
+				ret ~= format("mutexes[mutexIdx++] = &(args[%u].mutex);\n", idx);
+			}
+			++idx;
+		}}
+		ret ~= "sort(mutexes[0 .. mutexIdx]);\n";
+		return ret;
+	}
+
+	static string buildMutexArrayLock() {
+		return
+"foreach(Mutex* mu; mutexes[0 .. mutexIdx]) {
+	mu.lock();
+}";
+	}
+
+	static string buildMutexArrayUnlock() {
+		return
+"foreach(Mutex* mu; mutexes[0 .. mutexIdx]) {
+	mu.lock();
+}";
+	}
+
 	static string buildExecuteCallString(Args...)() {
 		import std.traits : isInstanceOf;
 		import std.format : format;
@@ -86,8 +119,12 @@ struct FluxStore(T) {
 	}
 
 	void execute(alias Fun, Args...)(ref Args args) {
+		pragma(msg, buildMutexArray!Args());
 		pragma(msg, buildExecuteCallString!Args());
+		mixin(buildMutexArray!Args());
+		mixin(buildMutexArrayLock());
 		mixin(buildExecuteCallString!Args());
+		mixin(buildMutexArrayUnlock());
 	}
 
 }
@@ -122,8 +159,8 @@ unittest {
 unittest {
 	import std.format : format;
 	struct Bar {
-		int a;
 		int b;
+		int a;
 	}
 
 	static int increment(int a, int b) {
