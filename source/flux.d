@@ -4,7 +4,32 @@ import mutex : DummyMutex;
 
 enum Flux;
 
+<<<<<<< HEAD
 struct FluxStore(T,Mutex = DummyMutex) {
+=======
+string buildExecuteCallString(Args...)() {
+	import std.traits : isInstanceOf;
+	import std.format : format;
+	import observable;
+	string ret = "args[0] = Fun(";
+	size_t idx = 0;
+	static foreach(arg; Args) {
+		if(idx > 0) {
+			ret ~= ", ";
+		}
+		static if(isInstanceOf!(Observable, arg)) {
+			ret ~= format("cast(%s)args[%u]", arg.Type.stringof, idx);
+		} else {
+			ret ~= format("args[%u]", idx);
+		}
+		++idx;
+	}
+	ret ~= ");\nargs[0].publish();";
+	return ret;
+}
+
+struct FluxStore(T) {
+>>>>>>> moving stuff around
 	import observable;
 
 	pragma(msg, buildStruct!T());
@@ -67,6 +92,7 @@ struct FluxStore(T,Mutex = DummyMutex) {
 		return ret;
 	}
 
+<<<<<<< HEAD
 	static string buildMutexArray(Args...)() {
 		import std.traits : isInstanceOf;
 		import std.format : format;
@@ -118,6 +144,8 @@ struct FluxStore(T,Mutex = DummyMutex) {
 		return ret;
 	}
 
+=======
+>>>>>>> moving stuff around
 	void execute(alias Fun, Args...)(ref Args args) {
 		pragma(msg, buildMutexArray!Args());
 		pragma(msg, buildExecuteCallString!Args());
