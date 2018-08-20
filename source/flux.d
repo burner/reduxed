@@ -110,7 +110,6 @@ struct FluxStore(T,Mutex = DummyMutex) {
 		pragma(msg, buildMutexArray!Args());
 		pragma(msg, buildExecuteCallString!Args());
 		mixin(buildMutexArray!Args());
-		//mixin(buildMutexArrayLock());
 		foreach(Mutex* mu; mutexes[0 .. mutexIdx]) {
 			mu.lock();
 		}
