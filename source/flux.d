@@ -4,9 +4,6 @@ import mutex : DummyMutex;
 
 enum Flux;
 
-<<<<<<< HEAD
-struct FluxStore(T,Mutex = DummyMutex) {
-=======
 string buildExecuteCallString(Args...)() {
 	import std.traits : isInstanceOf;
 	import std.format : format;
@@ -28,8 +25,7 @@ string buildExecuteCallString(Args...)() {
 	return ret;
 }
 
-struct FluxStore(T) {
->>>>>>> moving stuff around
+struct FluxStore(T,Mutex = DummyMutex) {
 	import observable;
 
 	pragma(msg, buildStruct!T());
@@ -92,7 +88,6 @@ struct FluxStore(T) {
 		return ret;
 	}
 
-<<<<<<< HEAD
 	static string buildMutexArray(Args...)() {
 		import std.traits : isInstanceOf;
 		import std.format : format;
@@ -144,8 +139,6 @@ struct FluxStore(T) {
 		return ret;
 	}
 
-=======
->>>>>>> moving stuff around
 	void execute(alias Fun, Args...)(ref Args args) {
 		pragma(msg, buildMutexArray!Args());
 		pragma(msg, buildExecuteCallString!Args());
