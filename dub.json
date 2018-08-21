@@ -1,17 +1,10 @@
 {
-	"name": "fluxd",
+	"name": "reduxed",
 	"authors": [
 		"burner"
 	],
-	"configurations": [
-		{
-			"name": "unittestperf",
-			"targetType": "executable",
-			"dflags": ["-unittest", "-profile" ]
-		}
-	],
 	"dflags": ["-dip1000", "-dip25"],
-	"description": "A flux like store in d",
+	"description": "A redux/flux like store in D",
 	"copyright": "Copyright © 2018, burner",
 	"license": "LGPL3"
 }
