@@ -13,7 +13,7 @@ struct Bar {
 }
 
 // Create the store
-FluxStore!Bar store;
+Store!Bar store;
 // set store init values
 store.a = 1;
 store.b = 2;

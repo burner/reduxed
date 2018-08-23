@@ -1,4 +1,4 @@
-import flux;
+import reduxed;
 
 struct Foo {
 	int c = 10;
@@ -13,7 +13,7 @@ struct Bar {
 unittest {
 	void fun(ref const(Foo) f) @safe {
 	}
-	FluxStore!Bar store;
+	Store!Bar store;
 
 	store.foo.subscribe(&fun);
 }	
@@ -27,7 +27,7 @@ unittest {
 		}
 	}
 
-	struct Store {
+	struct StoreType {
 		int a;
 	}
 
@@ -38,7 +38,7 @@ unittest {
 	auto f = new Fun();
 	assert(f.localInt == 0);
 
-	FluxStore!Store store;
+	Store!StoreType store;
 	store.a.subscribe(&f.callback);
 
 	foreach(i; 1 .. 10) {

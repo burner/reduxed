@@ -1,14 +1,21 @@
-module flux;
+module reduxed;
 
 import mutex : DummyMutex;
 
-enum Flux;
+enum Reduxed;
 
 private string buildExecuteCallString(Args...)() {
-	import std.traits : isInstanceOf;
+	import std.traits : isInstanceOf, moduleName;
 	import std.format : format;
 	import observable;
-	string ret = "args[0] = Fun(";
+	enum isStruct = is(Args[0].Type == struct);
+	enum isClass = is(Args[0].Type == class);
+	static if(isStruct || isClass) {
+		string ret = format("import %s;\n", moduleName!(Args[0].Type));
+	} else {
+		string ret;
+	}
+	ret ~= "args[0] = Fun(";
 	size_t idx = 0;
 	static foreach(arg; Args) {
 		if(idx > 0) {
@@ -57,16 +64,17 @@ private string buildStructImpl(S, size_t indent)() {
 
 	string ret;
 	if(indent) {
-		ret = indentString(indent) ~ format("struct __Flux%s {\n", S.stringof);
+		ret = indentString(indent) ~ format("struct __Reduxed%s {\n", S.stringof);
 	}
 
 	static assert(is(S == struct));
 	foreach(mem; __traits(allMembers, S)) {
 		alias Type = typeof(__traits(getMember, S, mem));
 		enum isStruct = is(Type == struct);
-		static if(isStruct && hasUDA!(Type,Flux)) {
+		enum isClass = is(Type == class);
+		static if((isStruct || isClass) && hasUDA!(Type,Reduxed)) {
 			ret ~= buildStructImpl!(Type, indent + 1)();
-			ret ~= indentString(indent + 1) ~ format("__Flux%s %s;\n", 
+			ret ~= indentString(indent + 1) ~ format("__Reduxed%s %s;\n", 
 						Type.stringof, mem
 					);
 		} else {
@@ -100,7 +108,7 @@ private string buildStruct(S)() {
 	return ret;
 }
 
-struct FluxStore(T,Mutex = DummyMutex) {
+struct Store(T,Mutex = DummyMutex) {
 	import observable;
 
 	pragma(msg, buildStruct!T());
@@ -113,6 +121,7 @@ struct FluxStore(T,Mutex = DummyMutex) {
 		foreach(Mutex* mu; mutexes[0 .. mutexIdx]) {
 			mu.lock();
 		}
+		pragma(msg, buildExecuteCallString!Args());
 		mixin(buildExecuteCallString!Args());
 		foreach(Mutex* mu; mutexes[0 .. mutexIdx]) {
 			mu.unlock();
@@ -156,7 +165,7 @@ unittest {
 	}
 
 	// Create the store
-	FluxStore!Bar store;
+	Store!Bar store;
 	// set store init values
 	store.a = 1;
 	store.b = 2;
@@ -185,3 +194,4 @@ unittest {
 	assert(store.a.value == 3);
 	assert(a == 3);
 }	
+
