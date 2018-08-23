@@ -3,6 +3,8 @@ reduxed
 
 A library implementing the redux/flux pattern for the D Progamming Language.
 
+![ArchDiagram](arch_diagram.png)
+
 ```D
 // Define your store as a struct
 struct Bar {
