@@ -1,10 +1,15 @@
-reduxed
-=======
+# reduxed
 
-A library implementing the redux/flux pattern for the D Progamming Language.
-
+A library implementing the redux pattern in the D Progamming Language.
 ![ArchDiagram](arch_diagram.png)
 
+## When should you use reduxed?
+The redux pattern helps, when an application has shared state that needs to be
+observed and manipulated by multiple parts of the application.
+Additionally, using pure reducer functions makes it easy to test state
+transitions.
+
+## Examples
 ```D
 // Define your store as a struct
 struct Bar {
